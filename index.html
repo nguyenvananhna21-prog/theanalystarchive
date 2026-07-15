@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Inspired Square Carousel - Vietnam Landscapes</title>
+    <style>
+        :root {
+            --apple-easing: cubic-bezier(0.25, 1, 0.5, 1);
+            --duration: 0.75s; /* Thời gian chuyển ảnh 0.75s theo yêu cầu */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #0b0b0c;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        /* Container tổng hỗ trợ Auto Resize & Responsive */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+            overflow: visible;
+        }
+
+        .carousel-container:active {
+            cursor: grabbing;
+        }
+
+        .carousel-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        /* Khung ảnh vuông 1:1 có Layer, Shadow, Depth */
+        .slide {
+            position: absolute;
+            width: 320px; 
+            height: 320px; /* Định dạng hình vuông */
+            border-radius: 28px;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            will-change: transform, filter, opacity;
+            transition: transform var(--duration) var(--apple-easing), 
+                        filter var(--duration) var(--apple-easing), 
+                        opacity var(--duration) var(--apple-easing),
+                        box-shadow var(--duration) var(--apple-easing);
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0);
+        }
+
+        /* Lớp nền mờ khuếch tán phía sau tạo Depth (Background blur hiệu ứng Apple) */
+        .slide-blur-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px);
+            opacity: 0;
+            transform: scale(0.9) translateZ(-20px);
+            transition: opacity var(--duration) var(--apple-easing);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .slide.active .slide-blur-bg {
+            opacity: 0.35;
+        }
+
+        /* Layer hình ảnh chính */
+        .slide-media {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 28px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Lớp phủ tối (Overlay) tạo chiều sâu ánh sáng */
+        .slide::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 28px;
+            z-index: 2;
+            transition: background var(--duration) var(--apple-easing);
+            pointer-events: none;
+        }
+
+        .slide.active::after {
+            background: rgba(0, 0, 0, 0); /* Ảnh trung tâm sáng hoàn toàn */
+        }
+
+        /* Layer Text thông tin tiêu đề danh lam thắng cảnh */
+        .slide-info {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            color: #fff;
+            z-index: 3;
+            transform: translateZ(40px); /* Kéo chữ nổi bật lên hẳn lớp ảnh */
+            opacity: 0;
+            transition: opacity var(--duration) var(--apple-easing);
+        }
+
+        .slide-info h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+
+        .slide-info p {
+            font-size: 13px;
+            opacity: 0.85;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        }
+
+        /* ---- ĐỊNH HÌNH TRẠNG THÁI KHÔNG GIAN 3D & OVERLAP 35% ---- */
+
+        /* [5] Ảnh trung tâm - Nằm trên cùng, lớn nhất, đổ bóng sâu cực mạnh */
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) translateZ(200px) scale(1.15);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.75), 0 10px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+        .slide.active .slide-info {
+            opacity: 1;
+        }
+
+        /* [6] Ảnh bên phải 1 - Thu nhỏ lại, dịch lùi về sau, đè lên ảnh trung tâm ~35% */
+        .slide.next-1 {
+            opacity: 0.9;
+            pointer-events: auto;
+            transform: translateX(190px) translateZ(60px) scale(0.88);
+            filter: blur(1.5px);
+            z-index: 5;
+        }
+
+        /* [7] Ảnh bên phải 2 - Nhỏ hơn nữa, dịch xa hơn ra phía rìa phải */
+        .slide.next-2 {
+            opacity: 0.5;
+            transform: translateX(360px) translateZ(-60px) scale(0.68);
+            filter: blur(4px);
+            z-index: 3;
+        }
+
+        /* [4] Ảnh bên trái 1 - Đã qua trung tâm, dịch trượt về bên trái */
+        .slide.prev-1 {
+            opacity: 0.9;
+            pointer-events: auto;
+            transform: translateX(-190px) translateZ(60px) scale(0.88);
+            filter: blur(1.5px);
+            z-index: 5;
+        }
+
+        /* [3] Ảnh bên trái 2 - Nằm xa rìa trái */
+        .slide.prev-2 {
+            opacity: 0.5;
+            transform: translateX(-360px) translateZ(-60px) scale(0.68);
+            filter: blur(4px);
+            z-index: 3;
+        }
+
+        /* Các ảnh còn lại trong loop ẩn hoàn toàn ở vùng nền sâu */
+        .slide.hidden {
+            opacity: 0;
+            transform: translateX(0) translateZ(-200px) scale(0.5);
+            z-index: 1;
+        }
+
+        /* Responsive Mobile & Tablet */
+        @media (max-width: 768px) {
+            .carousel-container { height: 400px; }
+            .slide { width: 220px; height: 220px; }
+            .slide.active { transform: translateX(0) translateZ(100px) scale(1.1); }
+            .slide.next-1 { transform: translateX(125px) translateZ(30px) scale(0.85); filter: blur(1px); }
+            .slide.prev-1 { transform: translateX(-125px) translateZ(30px) scale(0.85); filter: blur(1px); }
+            .slide.next-2, .slide.prev-2 { opacity: 0; transform: translateX(0) translateZ(-100px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="carousel-container" id="carousel">
+        <div class="carousel-track" id="track">
+            <!-- 10 Ảnh vuông danh lam thắng cảnh VN - Hỗ trợ Lazy Loading chuyên sâu -->
+            <div class="slide" data-index="0">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&h=600&q=80" alt="Hạ Long">
+                <div class="slide-info"><h3>Vịnh Hạ Long</h3><p>Kỳ quan thiên nhiên hùng vĩ</p></div>
+            </div>
+            <div class="slide" data-index="1">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=600&h=600&q=80" alt="Hội An">
+                <div class="slide-info"><h3>Phố Cổ Hội An</h3><p>Đèn lồng phố cổ lung linh</p></div>
+            </div>
+            <div class="slide" data-index="2">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1509060464153-44667396260f?auto=format&fit=crop&w=600&h=600&q=80" alt="Sa Pa">
+                <div class="slide-info"><h3>Sapa Mù Sương</h3><p>Ruộng bậc thang uốn lượn</p></div>
+            </div>
+            <div class="slide" data-index="3">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1569154941061-e231b4725ef1?auto=format&fit=crop&w=600&h=600&q=80" alt="Tràng An">
+                <div class="slide-info"><h3>Tràng An - Ninh Bình</h3><p>Non nước hữu tình kì vĩ</p></div>
+            </div>
+            <!-- Ảnh thứ 5 (index 4) làm trung tâm mặc định ban đầu -->
+            <div class="slide" data-index="4">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=600&h=600&q=80" alt="Cầu Vàng">
+                <div class="slide-info"><h3>Cầu Vàng Đà Nẵng</h3><p>Lối đi giữa lưng chừng mây</p></div>
+            </div>
+            <div class="slide" data-index="5">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1605538032432-a9f0c8d9baac?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1605538032432-a9f0c8d9baac?auto=format&fit=crop&w=600&h=600&q=80" alt="Huế">
+                <div class="slide-info"><h3>Kinh Thành Huế</h3><p>Nét rêu phong hoàng cung xưa</p></div>
+            </div>
+            <div class="slide" data-index="6">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&h=600&q=80" alt="Hồ Gươm">
+                <div class="slide-info"><h3>Hồ Gươm Hà Nội</h3><p>Trái tim ngàn năm văn hiến</p></div>
+            </div>
+            <div class="slide" data-index="7">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1543158094-1a613636f3c0?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1543158094-1a613636f3c0?auto=format&fit=crop&w=600&h=600&q=80" alt="Phú Quốc">
+                <div class="slide-info"><h3>Đảo Ngọc Phú Quốc</h3><p>Thiên đường biển xanh cát trắng</p></div>
+            </div>
+            <div class="slide" data-index="8">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1582992770267-3a1b854a8069?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1582992770267-3a1b854a8069?auto=format&fit=crop&w=600&h=600&q=80" alt="Mũi Né">
+                <div class="slide-info"><h3>Cát Vàng Mũi Né</h3><p>Tiểu sa mạc đầy cát và gió</p></div>
+            </div>
+            <div class="slide" data-index="9">
+                <div class="slide-blur-bg" style="background-image: url('https://images.unsplash.com/photo-1621244419169-307238217bb4?auto=format&fit=crop&w=600&h=600&q=80');"></div>
+                <img class="slide-media" data-src="https://images.unsplash.com/photo-1621244419169-307238217bb4?auto=format&fit=crop&w=600&h=600&q=80" alt="Phong Nha">
+                <div class="slide-info"><h3>Động Phong Nha</h3><p>Kỳ quan hang động lộng lẫy</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const carousel = document.getElementById('carousel');
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const totalSlides = slides.length;
+        
+        let currentIndex = 4; // Bắt đầu từ ảnh thứ 5 (Index 4)
+        let isDragging = false;
+        let startX = 0;
+        let currentTranslate = 0;
+        let autoPlayTimer = null;
+
+        // --- LAZY LOADING ---
+        function lazyLoadImages() {
+            slides.forEach(slide => {
+                const img = slide.querySelector('.slide-media');
+                if (img && img.getAttribute('data-src') && !img.src) {
+                    img.src = img.getAttribute('data-src');
+                }
+            });
+        }
+
+        // --- HÀM ĐIỀU CHỈNH VÒNG LẶP VÔ HẠN (INFINITE LOOP) ---
+        function updateCarousel() {
+            slides.forEach((slide, i) => {
+                let offset = i - currentIndex;
+                
+                // Thuật toán cuộn vòng tròn vô hạn định
+                if (offset < -totalSlides / 2) offset += totalSlides;
+                if (offset > totalSlides / 2) offset -= totalSlides;
+
+                slide.className = 'slide';
+
+                // Phân bổ lớp hiển thị 3 4 [5] 6 7
+                if (offset === 0) {
+                    slide.classList.add('active');
+                } else if (offset === 1) {
+                    slide.classList.add('next-1');
+                } else if (offset === 2) {
+                    slide.classList.add('next-2');
+                } else if (offset === -1) {
+                    slide.classList.add('prev-1');
+                } else if (offset === -2) {
+                    slide.classList.add('prev-2');
+                } else {
+                    slide.classList.add('hidden');
+                }
+            });
+        }
+
+        // --- ĐIỀU KHIỂN CHUYỂN SLIDE TRƯỢT SANG TRÁI/PHẢI ---
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalSlides;
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+        }
+
+        // --- CƠ CHẾ TỰ ĐỘNG CHUYỂN ẢNH (2S HIỆN TẠI, 0.75S DI CHUYỂN) ---
+        function startAutoPlay() {
+            stopAutoPlay();
+            autoPlayTimer = setInterval(() => {
+                nextSlide();
+            }, 2750); // Lượt hiện 2000ms + thời gian chạy animation 750ms = 2750ms bền bỉ
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayTimer) clearInterval(autoPlayTimer);
+        }
+
+        // --- MOUSE DRAG & TOUCH SWIPE ---
+        function handleStart(e) {
+            stopAutoPlay();
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            currentTranslate = currentX - startX;
+        }
+
+        function handleEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            if (currentTranslate < -40) {
+                nextSlide();
+            } else if (currentTranslate > 40) {
+                prevSlide();
+            }
+            currentTranslate = 0;
+            startAutoPlay();
+        }
+
+        // --- SCROLL ANIMATION (CUỘN CHUỘT) ---
+        let lastWheelTime = 0;
+        function handleWheel(e) {
+            e.preventDefault();
+            const now = performance.now();
+            if (now - lastWheelTime < 750) return; // Khoá thời gian trùng với chuyển động để tránh chồng đè 60FPS
+
+            stopAutoPlay();
+            if (e.deltaY > 0 || e.deltaX > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+            lastWheelTime = now;
+            startAutoPlay();
+        }
+
+        // Gắn các bộ lắng nghe sự kiện
+        carousel.addEventListener('mousedown', handleStart);
+        carousel.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        carousel.addEventListener('touchstart', handleStart);
+        carousel.addEventListener('touchmove', handleMove);
+        window.addEventListener('touchend', handleEnd);
+
+        carousel.addEventListener('wheel', handleWheel, { passive: false });
+
+        // Cho phép ấn trực tiếp lên ảnh vệ tinh bên cạnh để chuyển đổi tiêu điểm nhanh
+        slides.forEach(slide => {
+            slide.addEventListener('click', () => {
+                stopAutoPlay();
+                currentIndex = parseInt(slide.getAttribute('data-index'));
+                updateCarousel();
+                startAutoPlay();
+            });
+        });
+
+        // Khởi động hệ thống
+        lazyLoadImages();
+        updateCarousel();
+        startAutoPlay();
+    </script>
+</body>
+</html>
