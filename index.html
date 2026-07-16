@@ -3,225 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tiến Hóa Loài Người - Bản Việt Nam</title>
+    <title>Apple Inspired 3:4 Carousel - 10 Images</title>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #e0f2f1 0%, #b3e5fc 50%, #c5cae9 100%);
-            --line-color: #2c3e50;
-            --color-1: #2980b9; /* Màu xanh dương (tương ứng Homo erectus ở bản 1) */
-            --color-2: #27ae60; /* Màu xanh lá (tương ứng Homo sapiens ở bản 1) */
+            --apple-easing: cubic-bezier(0.25, 1, 0.5, 1);
+            --duration: 0.75s;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: var(--bg-gradient);
+            background-color: #ffffff; /* Nền trắng sạch sẽ tiệp màu Google Sites */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 40px 20px;
-            overflow-x: auto;
+            overflow: hidden;
+            perspective: 1200px;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            letter-spacing: 4px;
-            color: #2c3e50;
-            text-transform: uppercase;
-            font-weight: 300;
-        }
-
-        .header p {
-            font-size: 1rem;
-            color: #7f8c8d;
-            margin-top: 5px;
-            letter-spacing: 2px;
-        }
-
-        /* Timeline Container */
-        .timeline-container {
+        .carousel-container {
             position: relative;
             width: 100%;
-            max-width: 800px; /* Nhỏ gọn hơn do chỉ có 2 cột */
-            min-width: 600px;
-            height: 500px;
+            max-width: 1200px;
+            height: 550px;
             display: flex;
-            align-items: center;
-            justify-content: space-around; /* Chia đều khoảng cách cho 2 mốc */
-            padding: 0 100px;
-        }
-
-        /* Trục nằm ngang ở giữa */
-        .main-line {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 50%;
-            height: 8px;
-            background-color: var(--line-color);
-            transform: translateY(-50%);
-            z-index: 1;
-            border-radius: 4px;
-        }
-
-        /* Từng mốc thời gian */
-        .timeline-node {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            z-index: 2;
-            width: 35%;
-        }
-
-        /* Nút tròn chứa số */
-        .node-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: #fff;
-            border: 4px solid var(--line-color);
-            display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            font-weight: bold;
-            color: #333;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-            cursor: pointer;
+            align-items: center;
+            cursor: grab;
             user-select: none;
+            overflow: visible;
         }
 
-        /* Nhánh nối đứng lên hoặc xuống */
-        .branch-line {
+        .carousel-container:active {
+            cursor: grabbing;
+        }
+
+        .carousel-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        .slide {
             position: absolute;
-            width: 4px;
-            background-color: var(--line-color);
-            transition: all 0.4s ease;
+            width: 300px; 
+            height: 400px; /* Tỷ lệ đứng chuẩn 3:4 */
+            border-radius: 24px;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            will-change: transform, filter, opacity;
+            transition: transform var(--duration) var(--apple-easing), 
+                        filter var(--duration) var(--apple-easing), 
+                        opacity var(--duration) var(--apple-easing),
+                        box-shadow var(--duration) var(--apple-easing);
+            opacity: 0;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         }
 
-        /* Nội dung chú thích */
-        .content-box {
+        .slide-blur-bg {
             position: absolute;
-            width: 220px;
-            text-align: center;
-            transition: all 0.4s ease;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(30px);
+            opacity: 0;
+            transform: scale(0.95) translateZ(-20px);
+            transition: opacity var(--duration) var(--apple-easing);
+            z-index: 0;
+            pointer-events: none;
         }
 
-        .content-box h3 {
-            font-size: 1.1rem;
-            margin-bottom: 6px;
-            font-weight: bold;
-            text-transform: uppercase;
+        .slide.active .slide-blur-bg {
+            opacity: 0.2; /* Hiệu ứng đổ bóng màu nhẹ nhàng */
         }
 
-        .content-box p {
-            font-size: 0.85rem;
-            color: #555;
-            line-height: 1.4;
+        .slide-media {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Tự động crop ảnh vừa vặn 3:4 */
+            border-radius: 24px;
+            z-index: 1;
+            pointer-events: none;
         }
 
-        /* Xếp xen kẽ Trên/Dưới giữ đúng nhịp của bản 1 */
-        
-        /* Mốc 1 nằm DƯỚI (Lẻ) */
-        .node-odd .branch-line {
-            top: 60px;
-            height: 50px;
-        }
-        .node-odd .content-box {
-            top: 120px;
-        }
-
-        /* Mốc 2 nằm TRÊN (Chẵn) */
-        .node-even .branch-line {
-            bottom: 60px;
-            height: 50px;
-        }
-        .node-even .content-box {
-            bottom: 120px;
-        }
-
-        /* Định nghĩa màu sắc & hover riêng biệt cho từng mốc */
-        
-        /* Mốc 1 (Homo erectus) */
-        .node-1 .node-circle { border-color: var(--color-1); color: var(--color-1); }
-        .node-1 .branch-line { background-color: var(--color-1); }
-        .node-1 .content-box h3 { color: var(--color-1); }
-
-        /* Mốc 2 (Homo sapiens) */
-        .node-2 .node-circle { border-color: var(--color-2); color: var(--color-2); }
-        .node-2 .branch-line { background-color: var(--color-2); }
-        .node-2 .content-box h3 { color: var(--color-2); }
-
-
-        /* HIỆU ỨNG HOVER (Mượt mà, nổi bật) */
-        .timeline-node:hover .node-circle {
-            transform: scale(1.25);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            background-color: #fff;
+        /* ---- CÁC TRẠNG THÁI HIỂN THỊ KHÔNG GIAN 3D ---- */
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) translateZ(200px) scale(1.12);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), 0 10px 20px rgba(0, 0, 0, 0.06);
             z-index: 10;
         }
 
-        .timeline-node:hover .branch-line {
-            width: 6px;
-            filter: brightness(1.1);
+        .slide.next-1 {
+            opacity: 0.9;
+            pointer-events: auto;
+            transform: translateX(180px) translateZ(50px) scale(0.88);
+            filter: blur(1px);
+            z-index: 5;
         }
 
-        .timeline-node:hover .content-box {
-            transform: translateY(calc(var(--dir, 1) * 8px));
-            filter: drop-shadow(0px 5px 5px rgba(0,0,0,0.1));
+        .slide.next-2 {
+            opacity: 0.45;
+            transform: translateX(340px) translateZ(-60px) scale(0.7);
+            filter: blur(3px);
+            z-index: 3;
         }
 
-        /* Định hướng dịch chuyển khi hover */
-        .node-odd:hover { --dir: 1; }
-        .node-even:hover { --dir: -1; }
+        .slide.prev-1 {
+            opacity: 0.9;
+            pointer-events: auto;
+            transform: translateX(-180px) translateZ(50px) scale(0.88);
+            filter: blur(1px);
+            z-index: 5;
+        }
 
+        .slide.prev-2 {
+            opacity: 0.45;
+            transform: translateX(-340px) translateZ(-60px) scale(0.7);
+            filter: blur(3px);
+            z-index: 3;
+        }
+
+        .slide.hidden {
+            opacity: 0;
+            transform: translateX(0) translateZ(-200px) scale(0.5);
+            z-index: 1;
+        }
+
+        /* Responsive mượt mà cho Mobile/Tablet */
+        @media (max-width: 768px) {
+            .carousel-container { height: 420px; }
+            .slide { width: 210px; height: 280px; }
+            .slide.active { transform: translateX(0) translateZ(100px) scale(1.1); }
+            .slide.next-1 { transform: translateX(115px) translateZ(30px) scale(0.85); filter: blur(0.5px); }
+            .slide.prev-1 { transform: translateX(-115px) translateZ(30px) scale(0.85); filter: blur(0.5px); }
+            .slide.next-2, .slide.prev-2 { opacity: 0; transform: translateX(0) translateZ(-100px); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>TIẾN HÓA LOÀI NGƯỜI</h1>
-        <p>BẢN THU GỌN - CÁC DẤU VẾT TẠI VIỆT NAM</p>
-    </div>
-
-    <div class="timeline-container">
-        <div class="main-line"></div>
-
-        <!-- Mốc 1: Dưới (Người tối cổ) -->
-        <div class="timeline-node node-odd node-1">
-            <div class="node-circle">01</div>
-            <div class="branch-line"></div>
-            <div class="content-box">
-                <h3>Homo erectus</h3>
-                <p><strong>~1.8 triệu - 100k năm trước.</strong> Người tối cổ đi đứng thẳng, biết dùng lửa. Dấu vết khảo cổ tại VN đạt khoảng 800.000 - 500.000 năm (Lạng Sơn, Thanh Hóa).</p>
+    <div class="carousel-container" id="carousel">
+        <div class="carousel-track" id="track">
+            <!-- HIỂN THỊ ĐỦ 10 ẢNH TỪ REPOSITORY GITHUB CỦA BẠN -->
+            <div class="slide" data-index="0">
+                <div class="slide-blur-bg" style="background-image: url('./1.jpg');"></div>
+                <img class="slide-media" data-src="./1.jpg" alt="Ảnh 1">
+            </div>
+            <div class="slide" data-index="1">
+                <div class="slide-blur-bg" style="background-image: url('./2.jpg');"></div>
+                <img class="slide-media" data-src="./2.jpg" alt="Ảnh 2">
+            </div>
+            <div class="slide" data-index="2">
+                <div class="slide-blur-bg" style="background-image: url('./3.jpg');"></div>
+                <img class="slide-media" data-src="./3.jpg" alt="Ảnh 3">
+            </div>
+            <div class="slide" data-index="3">
+                <div class="slide-blur-bg" style="background-image: url('./4.jpg');"></div>
+                <img class="slide-media" data-src="./4.jpg" alt="Ảnh 4">
+            </div>
+            <!-- Mặc định ban đầu ảnh số 5 (index 4) nằm giữa tiêu điểm -->
+            <div class="slide" data-index="4">
+                <div class="slide-blur-bg" style="background-image: url('./5.jpg');"></div>
+                <img class="slide-media" data-src="./5.jpg" alt="Ảnh 5">
+            </div>
+            <div class="slide" data-index="5">
+                <div class="slide-blur-bg" style="background-image: url('./6.jpg');"></div>
+                <img class="slide-media" data-src="./6.jpg" alt="Ảnh 6">
+            </div>
+            <div class="slide" data-index="6">
+                <div class="slide-blur-bg" style="background-image: url('./7.jpg');"></div>
+                <img class="slide-media" data-src="./7.jpg" alt="Ảnh 7">
+            </div>
+            <div class="slide" data-index="7">
+                <div class="slide-blur-bg" style="background-image: url('./8.jpg');"></div>
+                <img class="slide-media" data-src="./8.jpg" alt="Ảnh 8">
+            </div>
+            <div class="slide" data-index="8">
+                <div class="slide-blur-bg" style="background-image: url('./9.jpg');"></div>
+                <img class="slide-media" data-src="./9.jpg" alt="Ảnh 9">
+            </div>
+            <div class="slide" data-index="9">
+                <div class="slide-blur-bg" style="background-image: url('./10.jpg');"></div>
+                <img class="slide-media" data-src="./10.jpg" alt="Ảnh 10">
             </div>
         </div>
-
-        <!-- Mốc 2: Trên (Người tinh khôn sớm) -->
-        <div class="timeline-node node-even node-2">
-            <div class="content-box">
-                <h3>Homo sapiens</h3>
-                <p><strong>~300k năm trước - nay.</strong> Người hiện đại sớm. Xuất hiện tại Việt Nam khoảng 40.000 - 30.000 năm trước (Văn hóa Sơn Vi, Hòa Bình), biết chế tác công cụ tinh xảo.</p>
-            </div>
-            <div class="branch-line"></div>
-            <div class="node-circle">02</div>
-        </div>
-
     </div>
 
+    <script>
+        const carousel = document.getElementById('carousel');
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const totalSlides = slides.length;
+        
+        let currentIndex = 4; // Vị trí ảnh trung tâm ban đầu
+        let isDragging = false;
+        let startX = 0;
+        let currentTranslate = 0;
+        let autoPlayTimer = null;
+
+        function lazyLoadImages() {
+            slides.forEach(slide => {
+                const img = slide.querySelector('.slide-media');
+                if (img && img.getAttribute('data-src') && !img.src) {
+                    img.src = img.getAttribute('data-src');
+                }
+            });
+        }
+
+        // --- CẬP NHẬT GIẢI THUẬT PHÂN PHỐI 3D CHO SỐ LƯỢNG 10 ẢNH VÒNG LẶP ---
+        function updateCarousel() {
+            slides.forEach((slide, i) => {
+                let offset = i - currentIndex;
+                
+                // Thuật toán cuốn vòng tròn
+                if (offset < -totalSlides / 2) offset += totalSlides;
+                if (offset > totalSlides / 2) offset -= totalSlides;
+                
+                // Xử lý điểm đối diện rìa xa nhất cho số lượng chẵn (10 ảnh)
+                if (offset === totalSlides / 2 || offset === -totalSlides / 2) {
+                    offset = totalSlides / 2; 
+                }
+
+                slide.className = 'slide';
+
+                if (offset === 0) {
+                    slide.classList.add('active');
+                } else if (offset === 1) {
+                    slide.classList.add('next-1');
+                } else if (offset === 2) {
+                    slide.classList.add('next-2');
+                } else if (offset === -1) {
+                    slide.classList.add('prev-1');
+                } else if (offset === -2) {
+                    slide.classList.add('prev-2');
+                } else {
+                    slide.classList.add('hidden');
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % totalSlides;
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + totalSlides) % totalSlides;
+            updateCarousel();
+        }
+
+        function startAutoPlay() {
+            stopAutoPlay();
+            autoPlayTimer = setInterval(nextSlide, 2750);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayTimer) clearInterval(autoPlayTimer);
+        }
+
+        function handleStart(e) {
+            stopAutoPlay();
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            const currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+            currentTranslate = currentX - startX;
+        }
+
+        function handleEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            if (currentTranslate < -40) nextSlide();
+            else if (currentTranslate > 40) prevSlide();
+            currentTranslate = 0;
+            startAutoPlay();
+        }
+
+        let lastWheelTime = 0;
+        function handleWheel(e) {
+            e.preventDefault();
+            const now = performance.now();
+            if (now - lastWheelTime < 750) return;
+
+            stopAutoPlay();
+            if (e.deltaY > 0 || e.deltaX > 0) nextSlide();
+            else prevSlide();
+            lastWheelTime = now;
+            startAutoPlay();
+        }
+
+        carousel.addEventListener('mousedown', handleStart);
+        carousel.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        carousel.addEventListener('touchstart', handleStart);
+        carousel.addEventListener('touchmove', handleMove);
+        window.addEventListener('touchend', handleEnd);
+
+        carousel.addEventListener('wheel', handleWheel, { passive: false });
+
+        slides.forEach(slide => {
+            slide.addEventListener('click', () => {
+                stopAutoPlay();
+                currentIndex = parseInt(slide.getAttribute('data-index'));
+                updateCarousel();
+                startAutoPlay();
+            });
+        });
+
+        lazyLoadImages();
+        updateCarousel();
+        startAutoPlay();
+    </script>
 </body>
 </html>
